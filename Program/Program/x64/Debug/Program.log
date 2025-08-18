@@ -1,3 +1,0 @@
-﻿  Source.c
-C:\Users\Administrator\Desktop\Game-class\Program\Source.c(52,28): error C2198: 'double pow(double,double)': 호출에 인수가 너무 적습니다.
-C:\Users\Administrator\Desktop\Game-class\Program\Source.c(52,54): error C2198: 'double pow(double,double)': 호출에 인수가 너무 적습니다.
