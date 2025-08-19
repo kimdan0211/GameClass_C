@@ -1,36 +1,24 @@
 ﻿#include <stdio.h>
-#define SIZE 10
+//#include <windows.h>
 
-int main()
+#define UP 72
+#define LEFT 75
+#define RIGHT 77
+#define DOWN 80
+
+void move(int x, int y)
 {
-#pragma region GetAsyncKeyState
-    // Window API에서 제공하는 입력 처리 함수로, 지정된 키의 상태를
-    // 비동적으로 확인할 깨 사용되는 함수입니다.
+    // x와 y축을 설정하는 구조체입니다.
+    //COORD position = {x, y};
 
-    // Key State
+    // 콘솔 좌표 설정 함수입니다.
+    //SetConsolePosition(GetStdHandle(STD_OUTPUT_HANDLE),position);
+};
 
-    // 0x0000 : 이전에 누른 적이 없고, 호출 시점에도 눌려있지 않은 상태
+int main(){
 
-    // 0x0001 : 이전에 누른 적이 있고, 호출 시점에는 눌려있지 않은 상태
-
-    // 0x8000 : 이전에 누른 적이 없고, 호출 시점에는 눌려있는 상태
-
-    // 0x8001 : 이전에 누른 적이 있고, 호출 시점에도 눌려있는 상태
-
-    const char* text[SIZE] = {
-        "ㅇㅇ",
-        "ㅂㅂ",
-        "ㅈㅈ",
-        "ㄷㄷ",
-        "ㄱㄱ",
-        "ㅅㅅ",
-        "ㄴㄴ",
-        "ㄹㄹ",
-        "ㅊㅊ",
-        "ㅌㅌ"
-    };
-
-#pragma endregion
+    move(5,10);
+    printf("⭐️");
 
 
     return 0;
