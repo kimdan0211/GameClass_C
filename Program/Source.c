@@ -1,25 +1,56 @@
 ﻿#include <stdio.h>
-//#include <windows.h>
+#include <conio.h>
+#include <windows.h>
 
-#define UP 72
-#define LEFT 75
-#define RIGHT 77
-#define DOWN 80
+int screen_index;
+HANDLE screen[2];
 
-void move(int x, int y)
+void initialize()
 {
-    // x와 y축을 설정하는 구조체입니다.
-    //COORD position = {x, y};
+    CONSOLE_CURSOR_INFO cursor;
 
-    // 콘솔 좌표 설정 함수입니다.
-    //SetConsolePosition(GetStdHandle(STD_OUTPUT_HANDLE),position);
+    // 화면 버퍼를 2개 생성합니다.
+    screen[0] = CreateConsoleScreenBuffer
+    (
+        GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        CONSOLE_TEXTMODE_BUFFER, NULL
+    );
+
+    screen[1] = CreateConsoleScreenBuffer
+    (
+        GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        CONSOLE_TEXTMODE_BUFFER, NULL
+    );
+
+    cursor.dwSize = 1;
+    cursor.bVisible = FALSE;
+
+    SetConsoleCursorInfo(screen[0], &cursor);
+    SetConsoleCursorInfo(screen[1], &cursor);
 };
 
-int main(){
+void flip()
+{
+    SetConsoleActiveScreenBuffer(screen[screen_index]);
 
-    move(5,10);
-    printf("⭐️");
+    screen_index = !screen_index;
+}
 
+void clear()
+{
+    COORD position = {0, 0};
+
+    DWORD dword;
+
+    CONSOLE_SCREEN_BUFFER_INFO console;
+
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    GetConsoleScreenBufferInfo(handle, &console);
+}
+
+int main()
+{
 
     return 0;
 }
