@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>    // atexit, rand
-#include <termios.h>   // termios
-#include <unistd.h>    // read(), STDIN_FILENO, usleep
+#include <stdlib.h>    // atexit, rand, system
 #include <time.h>      // time
+#include <windows.h>   // Sleep
+#include <conio.h>     // _getch()
 
 #define SIZE  20
 #define EMPTY '.'
@@ -19,41 +19,30 @@ enum {
 static const int DIR4_DR[4] = { 1, 0, 1, -1 }; // 세로, 가로, ↘, ↗
 static const int DIR4_DC[4] = { 0, 1, 1,  1 };
 
-// 터미널 I/O
-static struct termios g_term_orig;
-
-static void tty_restore(void) {
-    tcsetattr(STDIN_FILENO, TCSANOW, &g_term_orig);
-}
+// 터미널 I/O (Windows에서는 별도 raw 모드 불필요)
+static void tty_restore(void) { /* no-op on Windows */ }
 static void tty_enable_raw(void) {
-    struct termios t;
-    tcgetattr(STDIN_FILENO, &g_term_orig);
     atexit(tty_restore);
-    t = g_term_orig;
-    t.c_lflag &= ~(ICANON | ECHO);
-    t.c_cc[VMIN]  = 1;
-    t.c_cc[VTIME] = 0;
-    tcsetattr(STDIN_FILENO, TCSANOW, &t);
+    // 필요 시 콘솔 모드 조정 가능하지만, _getch()로 충분
 }
 
 // 단일 키 읽기 (방향/공백/u/q)
 static int read_key(void){
-    unsigned char c;
-    if (read(STDIN_FILENO, &c, 1) != 1) return KEY_NONE;
-    if (c=='q'||c=='Q') return KEY_Q;
-    if (c==' ')         return KEY_SPACE;
-    if (c=='u'||c=='U') return KEY_U;
-    if (c==0x1B){
-        unsigned char seq[2];
-        if (read(STDIN_FILENO,&seq[0],1)!=1) return KEY_NONE;
-        if (read(STDIN_FILENO,&seq[1],1)!=1) return KEY_NONE;
-        if (seq[0]=='['){
-            if (seq[1]=='A') return KEY_UP;
-            if (seq[1]=='B') return KEY_DOWN;
-            if (seq[1]=='C') return KEY_RIGHT;
-            if (seq[1]=='D') return KEY_LEFT;
+    int ch = _getch();              // 블로킹 1글자 입력
+    if (ch=='q'||ch=='Q') return KEY_Q;
+    if (ch==' ')         return KEY_SPACE;
+    if (ch=='u'||ch=='U') return KEY_U;
+
+    // 방향키는 0 또는 224(0xE0) 후에 실제 코드가 옴
+    if (ch==0 || ch==0xE0){
+        int ch2 = _getch();
+        switch (ch2){
+            case 72: return KEY_UP;    // ↑
+            case 80: return KEY_DOWN;  // ↓
+            case 77: return KEY_RIGHT; // →
+            case 75: return KEY_LEFT;  // ←
+            default: return KEY_NONE;
         }
-        return KEY_NONE;
     }
     return KEY_NONE;
 }
@@ -71,7 +60,7 @@ static void board_init(void){
             g_board[y][x] = EMPTY;
 }
 
-static void screen_clear(void){ printf("\033[H\033[J"); }
+static void screen_clear(void){ system("cls"); }
 
 static void draw(int cx,int cy,int turn){
     screen_clear();
@@ -133,7 +122,7 @@ static int is_open_four(int row,int col,int dr,int dc,char s){
     return 0;
 }
 
-// .XXX. / .SS.S. / .S.SS. (중심 가정 포함)
+// .XXX. / .SS.S. / .S.SS. (중심 가정 포함, 엄격)
 static int is_open_three(int row,int col,int dr,int dc,char s){
     if (is_open_four(row,col,dr,dc,s)) return 0; // 이미 열린4면 삼으로 카운트 X
 
@@ -214,6 +203,8 @@ static int is_legal_move(char who, int row, int col){
     }
     return 1;
 }
+
+// 보조 유틸
 
 static int board_is_empty(void){
     for(int y=0;y<SIZE;y++)
@@ -320,6 +311,7 @@ static int ai_pick_move(int* out_r, int* out_c, char who){
     return 0;
 }
 
+// 메인
 int main(void){
     srand((unsigned)time(NULL));
     tty_enable_raw();
@@ -382,7 +374,7 @@ int main(void){
         if (AI_ENABLED && AI_IS_WHITE && turn%2==0){
             int ar=-1, ac=-1;
             if (ai_pick_move(&ar,&ac,WHITE)){
-                usleep(120000); // 시각적 딜레이
+                Sleep(120); // 시각적 딜레이 (ms)
                 g_board[ar][ac]=WHITE;
                 g_hist[g_hist_top++] = (Move){ar,ac,WHITE};
 
@@ -400,6 +392,5 @@ int main(void){
             }
         }
     }
-    printf("\n\n");
     return 0;
 }
